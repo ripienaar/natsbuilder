@@ -1,0 +1,102 @@
+name: natsbuilder
+description: Builds Docker Compose based nats networks
+version: 1.0.0
+author: R.I.Pienaar <rip@devco.net>
+
+commands:
+  - name: shell
+    type: exec
+    description: Executes the "nats" CLI against a specific server and cluster
+    arguments:
+      - name: server
+        description: The server number to run against
+        default: "1"
+      - name: cluster
+        description: The cluster number to run against
+        default: "1"
+    flags:
+      - name: system
+        description: Log in using the system account
+        bool: true
+    banner: |
+      {{- if gt (.Arguments.cluster|atoi) (.Config.clusters|atoi) }}
+        {{ fail (cat "Only" .Config.clusters "clusters are defined") }}
+      {{ end -}}
+      {{- if gt (.Arguments.server|atoi) (.Config.members|atoi) }}
+        {{ fail (cat "Only" .Config.members "member servers are defined") }}
+      {{ end -}}
+      >>>
+      >>> Starting a nats shell for n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222{{if .Flags.system}} using the system account{{end}}
+      >>>
+    script: |
+      {{ if .Flags.system }}
+        docker compose run --env NATS_USER=system --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222" cli.{{.Config.domain}} 
+      {{ else }}
+        docker compose run --env NATS_USER=user --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222" cli.{{.Config.domain}} 
+      {{ end }}
+
+  - name: generate
+    type: scaffold
+    banner: | 
+      Generating {{.Flags.clusters }} NATS Cluster each with {{.Flags.members }} servers in {{ .Arguments.target }}
+      
+                      JetStream: {{ if .Flags.jetstream}}yes{{else}}no{{end}}
+                     DNS Domain: {{ .Flags.domain }}
+                    Docker Image: {{ .Flags.image }}
+         Container Configuration: {{ index .Flags "config-path" }}
+                 System Password: system / {{ .Flags.password }}
+                   User Password: user / {{ .Flags.password }}
+       
+      Port Configuration:
+      
+      {{- $flags := .Flags }}
+      {{- $base_port := .Flags.port | atoi -}}
+      {{- range $cluster := $flags.clusters | atoi | seq | split " " }}
+        {{- range $node := $flags.members | atoi | seq | split " " }}
+          {{- $client_listen := (sub (add $base_port (mul (sub $cluster 1) 100) $node) 1) -}}
+          {{- $node_name := cat "n" $node ".c" $cluster | nospace }}
+        {{ $node_name }}.{{ $flags.domain }}:{{ $client_listen }}
+        {{- end }}
+      {{- end }}
+      
+      Start the network by changing to the "{{.Arguments.target}}" directory and doing "docker compose up"
+      
+      To log into the network "abt shell <node> <cluster>" in the "{{.Arguments.target}}" directory.
+
+    arguments:
+      - name: target
+        description: Directory to create the cluster configuration in
+        required: true
+    flags:
+      - name: data
+        description: Directory to store data in
+        default: ./data
+      - name: domain
+        description: The DNS domain to use for the network
+        default: nats.local
+      - name: image
+        description: The docker image to use
+        default: nats:latest
+      - name: clusters
+        description: The number of clusters to create
+        default: "3"
+      - name: members
+        description: The number of servers to create per cluster
+        default: "3"
+      - name: port
+        description: The port used by the first server in the first cluster
+        default: 10000
+      - name: config-path
+        description: The location in the docker container to mount the configuration
+        default: /nats-server.conf
+      - name: password
+        description: When set creates multiple accounts with this password
+        default: s3cret
+      - name: jetstream
+        description: Enables JetStream in the cluster
+        bool: true
+        default: true
+      - name: mount
+        description: Mounts a specific directory into the containers
+    target: "{{ .Arguments.target }}"
+    source_directory: "{{ AppDir }}/templates"

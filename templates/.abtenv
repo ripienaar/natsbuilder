@@ -1,0 +1,5 @@
+domain: {{.Flags.domain}}
+port: {{.Flags.port}}
+password: {{.Flags.password}}
+clusters: "{{.Flags.clusters}}"
+members: "{{.Flags.members}}"

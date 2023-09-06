@@ -19,8 +19,14 @@ Start it with `docker compose up`.
 Once running use `abt shell 1 2` to access the user account connect to server 1 in cluster 2.  Pass `--system` to access
 the System account.
 
-Multiple networks can be run at the same time by adjusting the base port used for allocation client ports using 
+Multiple networks can be run at the same time by adjusting the base port used for allocation client ports using
 `--port`.
+
+If you wish to run a Nightly build of NATS Server create the network like this while fixing the date stamp in the image:
+
+```
+$ abt generate 3x3 --image synadia/nats-server:nightly-20230906 --config-path /nats/conf/nats-server.conf
+```
 
 ## Contact
 

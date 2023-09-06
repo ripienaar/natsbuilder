@@ -26,29 +26,29 @@ commands:
         {{ fail (cat "Only" .Config.members "member servers are defined") }}
       {{ end -}}
       >>>
-      >>> Starting a nats shell for n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222{{if .Flags.system}} using the system account{{end}}
+      >>> Starting a nats shell for n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222{{if .Flags.system}} using the system account{{end}}
       >>>
     script: |
       {{ if .Flags.system }}
-        docker compose run --env NATS_USER=system --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222" cli.{{.Config.domain}} 
+        docker compose run --env NATS_USER=system --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222" cli.{{.Config.domain}}
       {{ else }}
-        docker compose run --env NATS_USER=user --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}:4222" cli.{{.Config.domain}} 
+        docker compose run --env NATS_USER=user --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222" cli.{{.Config.domain}}
       {{ end }}
 
   - name: generate
     type: scaffold
-    banner: | 
+    banner: |
       Generating {{.Flags.clusters }} NATS Cluster each with {{.Flags.members }} servers in {{ .Arguments.target }}
-      
+
                       JetStream: {{ if .Flags.jetstream}}yes{{else}}no{{end}}
                      DNS Domain: {{ .Flags.domain }}
                     Docker Image: {{ .Flags.image }}
          Container Configuration: {{ index .Flags "config-path" }}
                  System Password: system / {{ .Flags.password }}
                    User Password: user / {{ .Flags.password }}
-       
+
       Port Configuration:
-      
+
       {{- $flags := .Flags }}
       {{- $base_port := .Flags.port | atoi -}}
       {{- range $cluster := $flags.clusters | atoi | seq | split " " }}
@@ -58,9 +58,9 @@ commands:
         {{ $node_name }}.{{ $flags.domain }}:{{ $client_listen }}
         {{- end }}
       {{- end }}
-      
+
       Start the network by changing to the "{{.Arguments.target}}" directory and doing "docker compose up"
-      
+
       To log into the network "abt shell <node> <cluster>" in the "{{.Arguments.target}}" directory.
 
     arguments:

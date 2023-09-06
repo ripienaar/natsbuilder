@@ -9,7 +9,7 @@ It requires you to have [AppBuilder 0.7.2](https://choria-io.github.io/appbuilde
 To create a network with 3 clusters and 3 nodes each in the `3x3` directory run:
 
 ```
-$ abt generate x --clusters 3 --members 3
+$ abt generate 3x3 --clusters 3 --members 3
 ```
 
 This will create all the needed compose files, config files and more.

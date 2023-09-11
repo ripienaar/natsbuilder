@@ -16,8 +16,8 @@ This will create all the needed compose files, config files and more.
 
 Start it with `docker compose up`.
 
-Once running use `abt shell 1 2` to access the user account connect to server 1 in cluster 2.  Pass `--system` to access
-the System account.
+Once running use `abt shell` to access the user account, the shell has numerous `nats` contexts setup, see `nats ctx 
+ls`.
 
 Multiple networks can be run at the same time by adjusting the base port used for allocation client ports using
 `--port`.

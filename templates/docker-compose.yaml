@@ -11,6 +11,7 @@ services:
       - shared
     {{- if $flags.mount }}
     volumes:
+      - "./cli:/root/.config/nats"
       - {{ $flags.mount }}
     {{- end }}
 

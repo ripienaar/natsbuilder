@@ -6,50 +6,29 @@ author: R.I.Pienaar <rip@devco.net>
 commands:
   - name: shell
     type: exec
-    description: Executes the "nats" CLI against a specific server and cluster
-    arguments:
-      - name: server
-        description: The server number to run against
-        default: "1"
-      - name: cluster
-        description: The cluster number to run against
-        default: "1"
-    flags:
-      - name: system
-        description: Log in using the system account
-        bool: true
+    description: Executes the "nats" CLI
     banner: |
-      {{- if gt (.Arguments.cluster|atoi) (.Config.clusters|atoi) }}
-        {{ fail (cat "Only" .Config.clusters "clusters are defined") }}
-      {{ end -}}
-      {{- if gt (.Arguments.server|atoi) (.Config.members|atoi) }}
-        {{ fail (cat "Only" .Config.members "member servers are defined") }}
-      {{ end -}}
       >>>
-      >>> Starting a nats shell for n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222{{if .Flags.system}} using the system account{{end}}
+      >>> Starting a nats shell with contexts setup per cluster for user and system access.
+      >>>
+      >>> See "nats ctx ls" for a list of available contexts.
       >>>
     script: |
-      {{ if .Flags.system }}
-        docker compose run --env NATS_USER=system --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222" cli.{{.Config.domain}}
-      {{ else }}
-        docker compose run --env NATS_USER=user --env NATS_PASSWORD="{{.Config.password}}" --env NATS_URL="n{{.Arguments.server}}.c{{.Arguments.cluster}}.{{.Config.domain}}:4222" cli.{{.Config.domain}}
-      {{ end }}
-
+      docker compose run -v "{{ UserWorkingDir }}/cli:/root/.config/nats" cli.{{.Config.domain}}
   - name: generate
     type: scaffold
     banner: |
       Generating {{.Flags.clusters }} NATS Cluster each with {{.Flags.members }} servers in {{ .Arguments.target }}
 
-                      JetStream: {{ if .Flags.jetstream}}yes{{else}}no{{end}}
-                     DNS Domain: {{ .Flags.domain }}
+                       JetStream: {{ if .Flags.jetstream}}yes{{else}}no{{end}}
+                      DNS Domain: {{ .Flags.domain }}
                     Docker Image: {{ .Flags.image }}
          Container Configuration: {{ index .Flags "config-path" }}
                  System Password: system / {{ .Flags.password }}
                    User Password: user / {{ .Flags.password }}
 
       Port Configuration:
-
-      {{- $flags := .Flags }}
+      {{ $flags := .Flags }}
       {{- $base_port := .Flags.port | atoi -}}
       {{- range $cluster := $flags.clusters | atoi | seq | split " " }}
         {{- range $node := $flags.members | atoi | seq | split " " }}
@@ -61,7 +40,7 @@ commands:
 
       Start the network by changing to the "{{.Arguments.target}}" directory and doing "docker compose up"
 
-      To log into the network "abt shell <node> <cluster>" in the "{{.Arguments.target}}" directory.
+      To log into the network use "abt shell" in the "{{.Arguments.target}}" directory.
 
     arguments:
       - name: target
@@ -98,5 +77,6 @@ commands:
         default: true
       - name: mount
         description: Mounts a specific directory into the containers
+    skip_empty: true
     target: "{{ .Arguments.target }}"
     source_directory: "{{ AppDir }}/templates"

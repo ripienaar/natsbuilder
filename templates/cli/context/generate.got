@@ -1,0 +1,18 @@
+{{- $flags := .Flags }}
+{{- range $cluster := $flags.clusters | atoi | seq | split " " }}
+  {{- $data := dict "cluster" (cat "c" $cluster | nospace) }}
+  {{- $data :=set $data "password" $flags.password }}
+  {{- $data := set $data "urls" list }}
+  {{- $data := set $data "members" ($flags.members | atoi | seq) }}
+  {{- range $node := $flags.members | atoi | seq | split " " }}
+    {{- $node_name := cat "n" $node ".c" $cluster | nospace }}
+    {{- $data := set $data "urls" (append (get $data "urls") (cat "nats://" $node_name "." $flags.domain ":4222" | nospace)) }}
+  {{- end }}
+  {{- render "_partials/user_context.got" $data | write (cat "cli/context/" (get $data "cluster") ".json" | nospace) }}
+  {{- render "_partials/system_context.got" $data | write (cat "cli/context/system_" (get $data "cluster") ".json" | nospace) }}
+  {{ if eq $cluster "1" }}
+    {{ $_ := set $data "main" true }}
+    {{- render "_partials/user_context.got" $data | write "cli/context/user.json" }}
+    {{- render "_partials/system_context.got" $data | write "cli/context/system.json" }}
+  {{ end }}
+{{- end }}

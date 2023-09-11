@@ -2,7 +2,7 @@
 
 This creates basic NATS Clusters for Docker Compose.
 
-It requires you to have [AppBuilder 0.7.2](https://choria-io.github.io/appbuilder/) or newer.
+It requires you to have [AppBuilder 0.7.3](https://choria-io.github.io/appbuilder/) or newer.
 
 ## Creating Networks
 

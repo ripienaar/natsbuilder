@@ -7,6 +7,9 @@ commands:
   - name: shell
     type: exec
     description: Executes the "nats" CLI
+    flags:
+      - name: mount
+        description: Mounts a specific directory into the containers
     banner: |
       >>>
       >>> Starting a nats shell with contexts setup per cluster for user and system access.
@@ -14,7 +17,11 @@ commands:
       >>> See "nats ctx ls" for a list of available contexts.
       >>>
     script: |
-      docker compose run -v "{{ UserWorkingDir }}/cli:/root/.config/nats" cli.{{.Config.domain}}
+      docker compose run -v "{{ UserWorkingDir }}/cli:/root/.config/nats" \
+      {{- if .Flags.mount }}
+      -v "{{.Flags.mount}}" \
+      {{- end }}
+      cli.{{.Config.domain}}
   - name: generate
     type: scaffold
     banner: |
